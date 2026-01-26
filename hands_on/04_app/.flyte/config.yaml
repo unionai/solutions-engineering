@@ -1,0 +1,8 @@
+admin:
+  endpoint:
+image:
+  builder: remote
+task:
+  domain: development
+  org:
+  project:
