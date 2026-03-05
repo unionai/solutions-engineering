@@ -1,0 +1,9 @@
+flyte>=2.0.0b21
+pandas
+pyarrow
+numpy
+scikit-learn
+lightgbm
+optuna
+matplotlib
+streamlit
