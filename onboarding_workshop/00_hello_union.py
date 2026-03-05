@@ -24,10 +24,7 @@ def greet(name: str) -> str:
 
 # Tasks can call other tasks — each runs in its own container
 @env.task
-def main(names: list[str] = None) -> list[str]:
-    if names is None:
-        names = ["Alice", "Bob", "Charlie", "Diana"]
-
+def main(names: list[str] = ["Alice", "Bob", "Charlie", "Diana"]) -> list[str]:
     # flyte.map = parallel execution across inputs
     greetings = list(flyte.map(greet, names))
     return greetings
