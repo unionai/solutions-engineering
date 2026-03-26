@@ -1,27 +1,29 @@
 """
 Agent definitions for the quote workflow.
 
-Each agent wraps an OpenAI Agent call behind @flyte.trace for observability.
+Each agent wraps an Anthropic Claude call behind @flyte.trace for observability.
 """
 
-from agents import Agent, Runner
+import anthropic
 
 import flyte
 
 from models import QuoteRequest, ResearchResult, PricingResult, Proposal
 
+ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
+
 
 @flyte.trace
-async def call_openai_agent(instructions: str, input_prompt: str) -> str:
-    """Helper to call OpenAI Agent. Traced for observability."""
-    result = await Runner.run(
-        Agent(
-            name="assistant",
-            instructions=instructions,
-        ),
-        input=input_prompt,
+async def call_anthropic(instructions: str, input_prompt: str) -> str:
+    """Helper to call Anthropic Claude. Traced for observability."""
+    client = anthropic.AsyncAnthropic()
+    message = await client.messages.create(
+        model=ANTHROPIC_MODEL,
+        max_tokens=1024,
+        system=instructions,
+        messages=[{"role": "user", "content": input_prompt}],
     )
-    return result.final_output
+    return message.content[0].text
 
 
 async def run_research(request: QuoteRequest) -> ResearchResult:
@@ -43,7 +45,7 @@ async def run_research(request: QuoteRequest) -> ResearchResult:
     3. Recommendations for this customer
     """
 
-    report = await call_openai_agent(instructions, input_prompt)
+    report = await call_anthropic(instructions, input_prompt)
 
     return ResearchResult(
         industry_overview=f"Industry analysis for {request.industry}",
@@ -72,7 +74,7 @@ async def run_pricing(request: QuoteRequest) -> PricingResult:
     4. Justification for the pricing
     """
 
-    pricing_text = await call_openai_agent(instructions, input_prompt)
+    pricing_text = await call_anthropic(instructions, input_prompt)
 
     budget_parts = request.budget_range.replace("$", "").replace(",", "").split("-")
     if len(budget_parts) == 2:
@@ -117,7 +119,7 @@ async def run_proposal(
     Draft a professional proposal document (2-3 paragraphs).
     """
 
-    proposal_text = await call_openai_agent(instructions, input_prompt)
+    proposal_text = await call_anthropic(instructions, input_prompt)
 
     return Proposal(
         customer_name=request.customer_name,

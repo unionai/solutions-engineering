@@ -1,76 +1,26 @@
 """
 Product Chat App - Flyte 2.0 Workshop Exercise
 
-A minimal RAG-based chat app using FastAPI, ChromaDB, and OpenAI Agents SDK.
+A minimal RAG-based chat app using FastAPI, ChromaDB, and Anthropic Claude.
 Demonstrates deploying always-on services with Flyte Apps.
 """
 
 from contextlib import asynccontextmanager
 
-from agents import Agent, Runner, function_tool
+import anthropic
+import flyte
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
-
-import flyte
 from flyte.app.extras import FastAPIAppEnvironment
-
+from mock_data import SAMPLE_DOCS
+from pydantic import BaseModel
+from tools import TOOL_FUNCTIONS, TOOLS
 from ui import CHAT_HTML
 
-# --- Mock Data ---
+ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
 
-PRODUCTS = [
-    {"id": "P-1001", "name": "Industrial Servo Motor", "category": "Motors", "specs": "5HP, 3-phase"},
-    {"id": "P-1002", "name": "Hydraulic Press", "category": "Presses", "specs": "100-ton capacity"},
-    {"id": "P-1003", "name": "PLC Controller", "category": "Controls", "specs": "32 I/O, Ethernet"},
-    {"id": "P-1004", "name": "Conveyor Belt System", "category": "Material Handling", "specs": "10m length"},
-    {"id": "P-1005", "name": "Safety Light Curtain", "category": "Safety", "specs": "Type 4, 1800mm"},
-]
-
-SAMPLE_DOCS = [
-    "Industrial servo motors provide precise positioning control for automated manufacturing. They offer high torque at low speeds and are ideal for CNC machines and robotic arms.",
-    "Hydraulic presses use fluid pressure to generate force for forming, stamping, and assembly operations. 100-ton models are commonly used in metal fabrication.",
-    "PLC (Programmable Logic Controller) systems control industrial automation processes. They support ladder logic programming and can interface with sensors, motors, and HMI displays.",
-    "Conveyor belt systems transport materials across production lines. Belt speed and load capacity must be matched to application requirements.",
-    "Safety light curtains create invisible protective barriers. When breached, they trigger emergency stops to protect operators from hazardous machinery.",
-]
 
 chroma_collection = None
-
-
-# --- Agent Tools ---
-
-
-@function_tool
-async def search_catalog(query: str) -> str:
-    """Search the product catalog for items matching the query."""
-    query_lower = query.lower()
-    matches = [p for p in PRODUCTS if query_lower in p["name"].lower() or query_lower in p["category"].lower()]
-
-    if not matches:
-        return "No products found matching your query."
-
-    results = []
-    for p in matches[:3]:
-        results.append(f"{p['id']}: {p['name']} ({p['category']}) - {p['specs']}")
-
-    return "\n".join(results)
-
-
-@function_tool
-async def retrieve_docs(query: str) -> str:
-    """Retrieve relevant documentation from the knowledge base."""
-    global chroma_collection
-
-    if chroma_collection is None:
-        return "Knowledge base not initialized."
-
-    results = chroma_collection.query(query_texts=[query], n_results=3)
-
-    if not results["documents"] or not results["documents"][0]:
-        return "No relevant documentation found."
-
-    return "\n\n".join(results["documents"][0])
 
 
 # --- FastAPI App ---
@@ -101,6 +51,25 @@ app = FastAPI(
 )
 
 
+# --- Flyte App Environment ---
+
+app_env = FastAPIAppEnvironment(
+    name="product-chat",
+    app=app,
+    description="RAG-based product chat assistant for industrial equipment",
+    image=flyte.Image.from_debian_base(python_version=(3, 12)).with_pip_packages(
+        "fastapi",
+        "uvicorn",
+        "anthropic",
+        "chromadb",
+    ),
+    resources=flyte.Resources(cpu=1, memory="1Gi"),
+    secrets=[flyte.Secret(key="ANTHROPIC_API_KEY", as_env_var="ANTHROPIC_API_KEY")],
+    requires_auth=False,
+    include=["ui.py", "tools.py", "mock_data.py"],
+)
+
+
 class ChatRequest(BaseModel):
     question: str
 
@@ -117,21 +86,57 @@ async def root():
 
 @app.post("/chat")
 async def chat(request: ChatRequest) -> ChatResponse:
-    """Process a question using the AI agent with RAG tools."""
-    result = await Runner.run(
-        Agent(
-            name="product_assistant",
-            instructions=(
-                "You are a helpful product specialist for industrial manufacturing equipment. "
-                "Use the search_catalog tool to find specific products and the retrieve_docs tool "
-                "to find technical information. Provide clear, concise answers based on the retrieved information."
-            ),
-            tools=[search_catalog, retrieve_docs],
-        ),
-        input=request.question,
+    """Process a question using Anthropic Claude with tool use."""
+    client = anthropic.AsyncAnthropic()
+
+    messages = [{"role": "user", "content": request.question}]
+    system_prompt = (
+        "You are a helpful product specialist for industrial manufacturing equipment. "
+        "Use the search_catalog tool to find specific products and the retrieve_docs tool "
+        "to find technical information. Provide clear, concise answers based on the retrieved information."
     )
 
-    return ChatResponse(answer=result.final_output)
+    response = await client.messages.create(
+        model=ANTHROPIC_MODEL,
+        max_tokens=1024,
+        system=system_prompt,
+        tools=TOOLS,
+        messages=messages,
+    )
+
+    # Handle tool use loop
+    while response.stop_reason == "tool_use":
+        tool_results = []
+        for block in response.content:
+            if block.type == "tool_use":
+                tool_fn = TOOL_FUNCTIONS[block.name]
+                result = tool_fn(**block.input)
+                tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "content": result,
+                    }
+                )
+
+        messages.append({"role": "assistant", "content": response.content})
+        messages.append({"role": "user", "content": tool_results})
+
+        response = await client.messages.create(
+            model=ANTHROPIC_MODEL,
+            max_tokens=1024,
+            system=system_prompt,
+            tools=TOOLS,
+            messages=messages,
+        )
+
+    # Extract final text response
+    answer = ""
+    for block in response.content:
+        if hasattr(block, "text"):
+            answer += block.text
+
+    return ChatResponse(answer=answer or "I couldn't generate a response.")
 
 
 @app.get("/health")
@@ -140,31 +145,9 @@ async def health():
     return {"status": "ok"}
 
 
-# --- Flyte App Environment ---
-
-app_env = FastAPIAppEnvironment(
-    name="product-chat",
-    app=app,
-    description="RAG-based product chat assistant for industrial equipment",
-    image=flyte.Image.from_debian_base(python_version=(3, 12)).with_pip_packages(
-        "fastapi",
-        "uvicorn",
-        "openai-agents",
-        "chromadb",
-    ),
-    resources=flyte.Resources(cpu=1, memory="1Gi"),
-    secrets=[flyte.Secret(key="openai-api-key", as_env_var="OPENAI_API_KEY")],
-    requires_auth=False,
-    include=["ui.py"],
-)
-
-
 if __name__ == "__main__":
     flyte.init_from_config()
     deployments = flyte.deploy(app_env)
-    d = deployments[0]
-    print(f"\nDeployed Product Chat App:")
-    print(f"URL: {d.url}")
-    print(f"\nTry it:")
-    print(f"  Browser: {d.url}/")
-    print(f'  API:     curl -X POST {d.url}/chat -H "Content-Type: application/json" -d \'{{"question": "What motors do you have?"}}\'')
+    print("\nDeployed Product Chat App successfully.")
+    for d in deployments:
+        print(d)

@@ -1,18 +1,20 @@
 import asyncio
 
-from agents import Agent, Runner
+import anthropic
 
 import flyte
+
+ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
 
 worker_env = flyte.TaskEnvironment(
     name="doc-worker",
     resources=flyte.Resources(cpu=2, memory="4Gi"),
     image=flyte.Image.from_debian_base().with_pip_packages(
-        "openai-agents",
+        "anthropic",
         "chromadb",
         "unionai-reuse>=0.1.9",
     ),
-    secrets=[flyte.Secret(key="openai-api-key", as_env_var="OPENAI_API_KEY")],
+    secrets=[flyte.Secret(key="ANTHROPIC_API_KEY", as_env_var="ANTHROPIC_API_KEY")],
     reusable=flyte.ReusePolicy(
         replicas=(1, 3),
         idle_ttl=120,
@@ -25,7 +27,7 @@ driver_env = flyte.TaskEnvironment(
     name="doc-driver",
     resources=flyte.Resources(cpu=1, memory="2Gi"),
     image=flyte.Image.from_debian_base().with_pip_packages(
-        "openai-agents",
+        "anthropic",
         "chromadb",
     ),
     depends_on=[worker_env],
@@ -34,23 +36,28 @@ driver_env = flyte.TaskEnvironment(
 
 @worker_env.task()
 async def process_document(doc_text: str, doc_id: str) -> dict:
-    """Extract structured information from a raw document using OpenAI Agent."""
+    """Extract structured information from a raw document using Anthropic."""
 
-    @flyte.trace()
-    async def extract_with_agent(text: str) -> str:
-        result = await Runner.run(
-            Agent(
-                name="document_processor",
-                instructions=(
-                    "Extract structured information from documents. "
-                    "Return JSON with fields: title, summary, key_topics (list), content (cleaned markdown)."
-                ),
-            ),
-            input=f"Process this document:\n\n{text}",
+    @flyte.trace
+    async def extract_with_anthropic(text: str) -> str:
+        client = anthropic.AsyncAnthropic()
+        message = await client.messages.create(
+            model=ANTHROPIC_MODEL,
+            max_tokens=1024,
+            messages=[
+                {
+                    "role": "user",
+                    "content": (
+                        "Extract structured information from this document. "
+                        "Return JSON with fields: title, summary, key_topics (list), content (cleaned markdown).\n\n"
+                        f"Document:\n{text}"
+                    ),
+                }
+            ],
         )
-        return result.final_output
+        return message.content[0].text
 
-    extracted = await extract_with_agent(doc_text)
+    extracted = await extract_with_anthropic(doc_text)
 
     return {
         "id": doc_id,

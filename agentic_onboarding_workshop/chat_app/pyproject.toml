@@ -5,11 +5,14 @@ description = "Exercise 2: Real-Time RAG Chat App"
 requires-python = ">=3.12"
 dependencies = [
     "flyte>=2.0.0b35",
-    "openai-agents",
+    "anthropic",
     "chromadb",
     "fastapi",
     "uvicorn",
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
 
 [build-system]
 requires = ["hatchling"]
