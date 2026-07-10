@@ -25,12 +25,12 @@ PRODUCTS = [
         "category": "Material Handling",
         "specs": "10m length",
     },
-    {
-        "id": "P-1005",
-        "name": "Safety Light Curtain",
-        "category": "Safety",
-        "specs": "Type 4, 1800mm",
-    },
+    # {
+    #     "id": "P-1005",
+    #     "name": "Safety Light Curtain",
+    #     "category": "Safety",
+    #     "specs": "Type 4, 1800mm",
+    # },
 ]
 
 SAMPLE_DOCS = [

@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Union · Data & ML Engineering</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" id="theme">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0d0c07;
+      --bg2:#161307;
+      --ink:#fff8ec;
+      --muted:#b8b295;
+      --violet:#facc15;   /* union yellow (primary accent) */
+      --violet2:#fde047;  /* bright lemon (gradient light) */
+      --cyan:#f59e0b;      /* amber/gold (secondary accent) */
+      --teal:#a3e635;      /* lime (success) */
+      --pink:#f472b6;
+      --amber:#fbbf24;
+      --card:#17140a;
+      --line:rgba(255,255,255,.08);
+    }
+
+    .reveal{
+      font-family:'Inter',system-ui,sans-serif;
+      font-size:34px;
+      color:var(--ink);
+    }
+    .reveal .slides{ text-align:left; }
+
+    /* Background */
+    .reveal-viewport{
+      background:
+        radial-gradient(1200px 700px at 80% -10%, rgba(250,204,21,.22), transparent 60%),
+        radial-gradient(1000px 700px at 0% 110%, rgba(245,158,11,.14), transparent 55%),
+        var(--bg);
+    }
+
+    .reveal h1,.reveal h2,.reveal h3,.reveal h4{
+      font-family:'Inter',sans-serif;
+      color:var(--ink);
+      text-transform:none;
+      letter-spacing:-.02em;
+      line-height:1.05;
+      font-weight:800;
+    }
+    .reveal h1{ font-size:2.0em; }
+    .reveal h2{ font-size:1.45em; }
+    .reveal h3{ font-size:1.05em; }
+    .reveal p,.reveal li{ color:var(--ink); line-height:1.35; }
+    .reveal strong{ color:#fff; }
+    .reveal em{ color:var(--cyan); font-style:normal; font-weight:600; }
+
+    .reveal a{ color:var(--cyan); }
+    .muted{ color:var(--muted)!important; }
+    .small{ font-size:.62em; }
+    .tiny{ font-size:.5em; }
+
+    .grad{
+      background:linear-gradient(92deg,var(--violet2),var(--cyan));
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+
+    .kicker{
+      display:inline-block;
+      font-family:'JetBrains Mono',monospace;
+      font-size:.5em; letter-spacing:.28em; text-transform:uppercase;
+      color:var(--cyan);
+      border:1px solid var(--line);
+      padding:.35em .8em; border-radius:999px;
+      margin-bottom:.6em;
+      background:rgba(245,158,11,.06);
+    }
+
+    /* Code */
+    .reveal pre{
+      width:100%;
+      box-shadow:0 18px 50px rgba(0,0,0,.5);
+      border:1px solid var(--line);
+      border-radius:14px;
+      font-size:.46em;
+      margin:.4em 0;
+    }
+    .reveal pre code{
+      font-family:'JetBrains Mono',monospace;
+      padding:1.1em 1.3em;
+      border-radius:14px;
+      line-height:1.5;
+      background:#14110a;
+      max-height:560px;
+    }
+    .reveal code{ font-family:'JetBrains Mono',monospace; }
+    code.inline{
+      background:rgba(250,204,21,.16);
+      color:#ffe9a8;
+      padding:.06em .4em; border-radius:6px; font-size:.85em;
+      border:1px solid rgba(250,204,21,.25);
+    }
+
+    /* Cards */
+    .cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:.4em; }
+    .cards.two{ grid-template-columns:repeat(2,1fr); }
+    .card{
+      background:linear-gradient(180deg,var(--card),#100e06);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:20px 20px 18px;
+      box-shadow:0 12px 30px rgba(0,0,0,.35);
+    }
+    .card h3{ font-size:.8em; margin:.1em 0 .25em; }
+    .card .ico{ font-size:1.4em; line-height:1; }
+    .card p{ font-size:.56em; color:var(--muted); margin:.2em 0 0; }
+
+    .pill{
+      display:inline-block; font-family:'JetBrains Mono',monospace;
+      font-size:.42em; color:#ffe9a8; background:rgba(250,204,21,.12);
+      border:1px solid rgba(250,204,21,.28); border-radius:8px;
+      padding:.2em .55em; margin:.18em .18em 0 0;
+    }
+
+    .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:34px; align-items:center; }
+    .two-col.codeleft{ grid-template-columns:1.1fr .9fr; }
+    .reveal ul{ margin-left:1em; }
+    .reveal .feat li{ list-style:none; margin:.32em 0; font-size:.66em; position:relative; padding-left:1.4em; }
+    .reveal .feat li:before{ content:"▹"; color:var(--cyan); position:absolute; left:0; }
+
+    /* Section divider */
+    .section{ text-align:left; }
+    .section .num{
+      font-family:'JetBrains Mono',monospace; font-size:.7em; color:var(--violet2);
+      letter-spacing:.2em;
+    }
+    .section h2{ font-size:2.3em; margin:.1em 0; }
+    .section .who{ color:var(--muted); font-size:.8em; }
+    .barline{ height:5px; width:140px; border-radius:99px; background:linear-gradient(90deg,var(--violet2),var(--cyan)); margin:.5em 0 .2em; }
+
+    table.cmp{ font-size:.6em; width:100%; border-collapse:collapse; }
+    table.cmp th,table.cmp td{ border-bottom:1px solid var(--line); padding:.5em .6em; }
+    table.cmp th{ color:var(--cyan); text-align:left; font-weight:600; }
+    table.cmp td:first-child{ color:var(--muted); }
+
+    .reveal .progress{ color:var(--violet2); height:4px; }
+    .reveal .controls{ color:var(--violet2); }
+
+    /* reserve a band at the bottom of every slide so the footer never
+       collides with content (reveal sizes each section to its content) */
+    .reveal .slides section{ padding-bottom:52px; }
+
+    .footer{
+      position:absolute; bottom:0; left:24px; right:24px;
+      display:flex; justify-content:space-between;
+      font-family:'JetBrains Mono',monospace; font-size:13px; color:rgba(255,255,255,.25);
+    }
+
+    .logo{
+      font-weight:800; letter-spacing:-.03em;
+    }
+    .dotgrid{
+      display:flex; gap:10px; flex-wrap:wrap; margin-top:.3em;
+    }
+    .stat{ display:inline-flex; flex-direction:column; gap:.1em; }
+    .stat b{ font-size:1.6em; }
+    .stat span{ font-size:.5em; color:var(--muted); font-family:'JetBrains Mono',monospace; letter-spacing:.1em; }
+    .stats{ display:flex; gap:50px; margin-top:.6em; }
+
+    .quote{ font-size:.8em; color:var(--muted); border-left:3px solid var(--violet); padding-left:.8em; }
+
+    /* before -> after scenario */
+    .vs{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:.7em; }
+    .vs .col{ border-radius:14px; padding:14px 16px; border:1px solid var(--line); }
+    .vs .before{ background:rgba(244,114,182,.06); border-color:rgba(244,114,182,.22); }
+    .vs .after{ background:rgba(45,212,191,.07); border-color:rgba(45,212,191,.28); }
+    .vs h4{ font-size:.5em; letter-spacing:.16em; text-transform:uppercase; margin:0 0 .4em; font-family:'JetBrains Mono',monospace; }
+    .vs .before h4{ color:var(--pink); }
+    .vs .after h4{ color:var(--teal); }
+    .vs li{ font-size:.56em; list-style:none; margin:.28em 0; padding-left:1.3em; position:relative; color:var(--muted); }
+    .vs .before li:before{ content:"✗"; color:var(--pink); position:absolute; left:0; }
+    .vs .after li:before{ content:"✓"; color:var(--teal); position:absolute; left:0; }
+    .vs .after li{ color:var(--ink); }
+
+    /* use-case strip */
+    .uses{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:.5em; }
+    .uses .u{ border-left:3px solid var(--violet); padding:.1em 0 .1em .7em; }
+    .uses .u b{ font-size:.6em; color:#fff; display:block; }
+    .uses .u span{ font-size:.52em; color:var(--muted); }
+
+    /* fake console */
+    .console{
+      font-family:'JetBrains Mono',monospace; font-size:.5em; line-height:1.7;
+      background:#0a0804; border:1px solid var(--line); border-radius:14px;
+      padding:16px 18px; box-shadow:0 18px 50px rgba(0,0,0,.5);
+    }
+    .console .dots{ margin-bottom:.6em; }
+    .console .dots i{ display:inline-block; width:11px; height:11px; border-radius:50%; margin-right:6px; }
+    .console .r{ color:var(--pink); }
+    .console .g{ color:var(--teal); }
+    .console .m{ color:var(--muted); }
+    .console .a{ color:var(--amber); }
+
+    /* media placeholders (swap for real screenshots / gifs) */
+    .ph{
+      position:relative;
+      border:2px dashed rgba(250,204,21,.5);
+      border-radius:16px;
+      background:
+        repeating-linear-gradient(45deg, rgba(255,255,255,.018) 0 14px, transparent 14px 28px),
+        linear-gradient(160deg, rgba(250,204,21,.10), rgba(245,158,11,.06));
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; gap:.35em; padding:1em; color:var(--muted);
+      box-shadow:inset 0 0 60px rgba(250,204,21,.06);
+    }
+    .ph .tag{
+      position:absolute; top:12px; left:12px;
+      font-family:'JetBrains Mono',monospace; font-size:.4em; letter-spacing:.14em;
+      color:#ffe9a8; background:rgba(250,204,21,.18);
+      border:1px solid rgba(250,204,21,.4); border-radius:8px; padding:.25em .6em;
+    }
+    .ph .ico{ font-size:1.7em; opacity:.85; }
+    .ph .lbl{ font-size:.6em; color:#fff; font-weight:600; max-width:24em; }
+    .ph .dim{ font-family:'JetBrains Mono',monospace; font-size:.42em; color:rgba(255,255,255,.35); }
+    .ph-hero{ width:100%; height:420px; margin-top:.3em; }
+    .ph.strip{ flex-direction:row; gap:.8em; height:120px; margin-top:16px; }
+    .ph.strip .ico{ font-size:1.3em; }
+    .ph.strip .lbl{ font-size:.55em; }
+  </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<!-- ============================================================ -->
+<!-- SECTION 3: DATA ENGINEERS -->
+<!-- ============================================================ -->
+<section data-background-gradient="linear-gradient(135deg,#2a2008,#0d0c07)">
+  <div class="section">
+    <div class="num">03 / 03</div>
+    <div class="barline"></div>
+    <h2>Data Engineers</h2>
+    <p class="who">Pipelines, scheduling, warehouses, and scale, without the orchestration tax.</p>
+    <div class="vs">
+      <div class="col before"><h4>The old way</h4>
+        <li>Airflow DAG + a separate Spark cluster + glue code</li>
+        <li>A failed backfill means rerunning steps by hand</li>
+        <li>Local and prod environments drift apart</li>
+      </div>
+      <div class="col after"><h4>With Union</h4>
+        <li>The pipeline <em>is</em> the Python, so run it locally or on the cluster</li>
+        <li>Per-task retries, caching &amp; versioned reruns built in</li>
+        <li>Fan out across the warehouse with one <code class="inline">flyte.map</code></li>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span class="logo">⬡ union.ai</span><span>Data Engineering</span></div>
+</section>
+<!-- DE: parallel + map -->
+<section data-background-color="#0d0c07">
+  <h2>Scale a function across <span class="grad">N inputs</span></h2>
+  <div class="two-col codeleft">
+    <pre><code data-trim class="language-python">@env.task
+async def classify_ticket(ticket: dict) -> dict:
+    ...
+
+# Fan out across the whole batch
+@env.task
+async def triage(tickets: list[dict]) -> list[dict]:
+    return list(flyte.map(classify_ticket, tickets))
+
+# ...or the async idiom for full control
+results = await asyncio.gather(
+    *(classify_ticket(t) for t in tickets)
+)</code></pre>
+    <div>
+      <ul class="feat">
+        <li><code class="inline">flyte.map(fn, items)</code> distributes across the cluster</li>
+        <li>Each item gets its own retries, cache, resources</li>
+        <li>Higher-order patterns: <em>auto-batcher</em>, <em>circuit breaker</em>, <em>fallback runner</em></li>
+      </ul>
+      <p class="tiny muted">e.g. support-ticket-triage batch inference</p>
+    </div>
+  </div>
+  <div class="footer"><span class="logo">⬡ union.ai</span><span>map · gather</span></div>
+</section>
+<!-- DE: scheduling + connectors -->
+<section data-background-color="#0d0c07">
+  <h2>Triggers and <span class="grad">warehouse pushdown</span></h2>
+  <div class="two-col">
+    <div>
+      <pre><code data-trim class="language-python"># Scheduling is a decorator arg
+@env.task(triggers=flyte.Trigger.hourly("t"))
+async def refresh(t: datetime):
+    ...
+
+# Cron / fixed-rate also built in
+flyte.Cron("0 * * * *", timezone="UTC")
+flyte.FixedRate(interval_minutes=60)</code></pre>
+      <p class="tiny muted">No external scheduler to run.</p>
+    </div>
+    <div>
+      <pre><code data-trim class="language-python"># Push compute into the warehouse
+from flyteplugins.snowflake import Snowflake
+
+extract = Snowflake(
+    name="extract_orders",
+    query_template="SELECT * FROM orders ...",
+    output_dataframe_type=pd.DataFrame,
+    batch=True,
+)</code></pre>
+      <p class="tiny muted">Snowflake · BigQuery · Databricks</p>
+    </div>
+  </div>
+  <div class="footer"><span class="logo">⬡ union.ai</span><span>triggers · connectors</span></div>
+</section>
+<!-- ============================================================ -->
+<!-- SECTION 1: ML / DATA SCIENCE -->
+<!-- ============================================================ -->
+<section data-background-gradient="linear-gradient(135deg,#33280a,#0d0c07)">
+  <div class="section">
+    <div class="num">01 / 03</div>
+    <div class="barline"></div>
+    <h2>ML &amp; Data Science</h2>
+    <p class="who">From a notebook to distributed GPU training to a deployed model.</p>
+    <div class="vs">
+      <div class="col before"><h4>The old way</h4>
+        <li>Scarce GPUs sit idle between runs</li>
+        <li>A spot interruption means restarting a long run</li>
+        <li>Hard to trace which data + code produced a model</li>
+      </div>
+      <div class="col after"><h4>With Union</h4>
+        <li>GPU per task, scale-to-zero when idle</li>
+        <li>Checkpoints resume across crashes &amp; spot interruptions</li>
+        <li>Every model pinned to an immutable code+data version</li>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span class="logo">⬡ union.ai</span><span>Machine Learning</span></div>
+</section>
+<!-- ML: hyperparams + GPU -->
+<section data-background-color="#0d0c07">
+  <h2>Hyperparameter sweeps in <span class="grad">a gather</span></h2>
+  <div class="two-col codeleft">
+    <pre><code data-trim class="language-python">gpu_env = env.clone_with(
+    name="train",
+    resources=flyte.Resources(cpu=6, memory="16Gi",
+                              gpu="A100:1"))
+
+@gpu_env.task
+async def sweep(grid: list[dict]) -> dict:
+    models = await asyncio.gather(
+        *[train.aio(p) for p in grid])      # N trainings, in parallel
+    evals  = await asyncio.gather(
+        *[evaluate.aio(m) for m in models])
+    return best(models, evals)</code></pre>
+    <div>
+      <ul class="feat">
+        <li>Each trial = its own GPU pod, retries, cache</li>
+        <li>Typed accelerators: <code class="inline">GPU</code>, <code class="inline">TPU</code>, and more + MIG partitions</li>
+        <li>Warm <code class="inline">ReusePolicy</code> pods → no per-trial cold start</li>
+      </ul>
+      <p class="tiny muted">workshops: ml/gridsearch_gpu</p>
+    </div>
+  </div>
+  <div class="footer"><span class="logo">⬡ union.ai</span><span>Sweeps · GPUs</span></div>
+</section>
+<!-- ML: distributed training via plugins -->
+<section data-background-color="#0d0c07">
+  <h2>Distributed frameworks, <span class="grad">as plugins</span></h2>
+  <div class="two-col codeleft">
+    <pre><code data-trim class="language-python">from flyteplugins.pytorch.task import Elastic
+
+torch_env = flyte.TaskEnvironment(
+    name="torch",
+    plugin_config=Elastic(
+        nnodes=2, nproc_per_node=8),   # elastic, fault-tolerant
+    resources=flyte.Resources(gpu="A100:8"),
+)
+
+@torch_env.task                        # normal def, not async
+def train(epochs: int) -> float:
+    torch.distributed.init_process_group("nccl")
+    model = DDP(MyModel())
+    ...                                # standard torchrun loop
+    return final_loss</code></pre>
+    <div>
+      <ul class="feat">
+        <li><strong>Framework integrations ship as plugins</strong>: PyTorch Elastic, Ray, Spark, Dask</li>
+        <li>Use <code class="inline">DDP</code> / <code class="inline">torchrun</code> exactly as you would locally</li>
+        <li><code class="inline">nnodes=1</code> runs as a plain task; <code class="inline">≥2</code> launches a real distributed job</li>
+        <li><code class="inline">flyte.Checkpoint</code> + <code class="inline">flyte.latest_checkpoint()</code> → resume across crashes &amp; spot interruptions</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer"><span class="logo">⬡ union.ai</span><span>Plugins · Distributed</span></div>
+</section>
+<!-- Agents/cross: OOM self-heal in action -->
+<section data-background-color="#0d0c07">
+  <h2>Hit an <span style="color:var(--pink)">OOM</span> → recover with <span class="grad">more memory</span></h2>
+  <div class="two-col">
+    <div>
+      <pre><code data-trim class="language-python">import flyte, flyte.errors
+
+while memory_mi <= max_memory_mi:
+    mem = f"{memory_mi}Mi"
+    try:
+        # re-run the SAME task with more memory
+        return await task_fn.override(
+            resources=flyte.Resources(memory=mem)
+        )(*args, **kwargs)
+    except flyte.errors.OOMError:
+        memory_mi += increment_mi   # bump & retry
+# (real: examples/higher_order_patterns/oom_retrier.py)</code></pre>
+      <p class="tiny muted"><code class="inline">flyte.errors.OOMError</code> is a real, catchable exception, not a crash you lose the run to.</p>
+    </div>
+    <div class="console">
+      <div class="dots"><i style="background:#ff5f56"></i><i style="background:#ffbd2e"></i><i style="background:#27c93f"></i></div>
+      <div class="a">Attempt 1</div><div class="m">› running task @ memory: 250Mi</div>
+      <div class="r">✗ OOMError: container exceeded 250Mi</div>
+      <div class="a" style="margin-top:.4em;">Attempt 2</div><div class="m">› running task @ memory: 450Mi</div>
+      <div class="r">✗ OOMError: container exceeded 450Mi</div>
+      <div class="a" style="margin-top:.4em;">Attempt 3</div><div class="m">› running task @ memory: 650Mi</div>
+      <div class="g">✓ Success with memory: 650Mi</div>
+    </div>
+  </div>
+  <div class="footer"><span class="logo">⬡ union.ai</span><span>task.override · OOMError</span></div>
+</section>
+<!-- ML: notebooks + serving -->
+<section data-background-color="#0d0c07">
+  <h2>Train interactively, <span class="grad">serve the artifact</span></h2>
+  <div class="two-col">
+    <div>
+      <h3 class="muted small" style="letter-spacing:.1em;">RUN FROM A NOTEBOOK</h3>
+      <pre><code data-trim class="language-python">flyte.init_from_config()
+
+run = flyte.run(train, epochs=10)   # remote
+print(run.url)                       # watch in UI
+run.wait()                           # block for result</code></pre>
+      <p class="tiny muted">papermill plugin · local TUI · devbox</p>
+    </div>
+    <div>
+      <h3 class="muted small" style="letter-spacing:.1em;">DEPLOY THE TRAINED MODEL</h3>
+      <pre><code data-trim class="language-python">from flyte.app.extras import FastAPIAppEnvironment
+
+app_env = FastAPIAppEnvironment(
+    name="sql-model", app=app,
+    resources=flyte.Resources(gpu=1),
+    scaling=flyte.app.Scaling(
+        replicas=(0, 1), scaledown_after=1800),
+)   # mounts the model artifact from a prior run
+flyte.serve(app_env)</code></pre>
+    </div>
+  </div>
+  <p style="font-size:.66em; margin-top:.2em;"><strong>Same platform</strong> covers the full arc: explore → train → fine-tune → <em>scale-to-zero serving</em>.</p>
+  <div class="footer"><span class="logo">⬡ union.ai</span><span>Notebooks · Serving</span></div>
+</section>
+<!-- ML: ship the last mile (apps & models) -->
+<section data-background-color="#0d0c07">
+  <h2>Ship the <span class="grad">last mile</span>: apps &amp; models</h2>
+  <div class="two-col codeleft">
+    <pre><code data-trim class="language-python">from flyte.app.extras import FastAPIAppEnvironment
+
+app_env = FastAPIAppEnvironment(
+    name="model-api", app=app,
+    resources=flyte.Resources(gpu=1),
+    scaling=flyte.app.Scaling(
+        replicas=(0, 3),            # scale-to-zero → burst to 3
+        scaledown_after=1800),
+    parameters=[flyte.app.Parameter(name="model",
+        value=flyte.app.RunOutput(           # mount a trained
+            task_name="finetune.pipeline", type="directory"))],
+)
+flyte.serve(app_env)        # or: flyte serve serving.py app_env</code></pre>
+    <div>
+      <ul class="feat">
+        <li><strong>First-class deployments</strong> next to your pipelines, sharing the same image, secrets, and versioning</li>
+        <li>FastAPI · Streamlit · Gradio · Panel · MCP servers · agent chat UIs</li>
+        <li><strong>Scale-to-zero</strong> <code class="inline">(0,1)</code> · always-on <code class="inline">(1,1)</code> · HA <code class="inline">(2,10)</code></li>
+        <li><code class="inline">RunOutput</code> wires a model artifact straight from a training run</li>
+        <li>Custom <code class="inline">Domain</code>, auth, and <code class="inline">Link</code>s between apps</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer"><span class="logo">⬡ union.ai</span><span>flyte.serve · AppEnvironment</span></div>
+</section>
+<!-- ML: case study -->
+<section data-background-color="#0d0c07">
+  <h2>Fraud detection, <span class="grad">end to end</span></h2>
+  <div class="cards" style="margin-top:.5em;">
+    <div class="card"><div class="ico">1️⃣</div><h3>Prepare data</h3><p>Feature engineering, cached. Artifacts pass as <code class="inline">flyte.io.Dir</code>.</p></div>
+    <div class="card"><div class="ico">2️⃣</div><h3>Feature store</h3><p>Feast materialize + point-in-time historical joins.</p></div>
+    <div class="card"><div class="ico">3️⃣</div><h3>Train XGBoost</h3><p>Live confusion-matrix & feature-importance reports.</p></div>
+  </div>
+  <div class="cards" style="margin-top:16px; grid-template-columns:1fr;">
+    <div class="card"><div class="ico">4️⃣</div><h3>Serve in real time</h3><p>FastAPI app reads features from the online store. One run = train → feature store → live serving.</p></div>
+  </div>
+  <p class="tiny muted" style="margin-top:.4em;">workshops: fraud-detection-feast · llm-fine-tuning-lora-qlora · detr-object-detection</p>
+  <div class="footer"><span class="logo">⬡ union.ai</span><span>Case study: Fraud</span></div>
+</section>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script>
+  Reveal.initialize({
+    hash:true,
+    transition:'slide',
+    transitionSpeed:'default',
+    backgroundTransition:'fade',
+    width:1280, height:720,
+    margin:0.06,
+    slideNumber:'c/t',
+    plugins:[ RevealHighlight, RevealNotes ],
+  });
+</script>
+</body>
+</html>
