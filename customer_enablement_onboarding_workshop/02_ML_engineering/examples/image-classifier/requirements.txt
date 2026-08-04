@@ -1,5 +1,0 @@
-flyte>=2.0.0b56
-torch
-torchvision
-datasets
-Pillow
