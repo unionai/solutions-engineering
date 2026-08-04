@@ -1,0 +1,15 @@
+flyte[tui]>=2.0
+langchain-core
+langchain-openai
+langgraph
+python-dotenv
+ddgs
+torch
+torchvision
+matplotlib
+fastapi
+uvicorn
+httpx
+gradio
+flyteplugins-wandb
+pygments
