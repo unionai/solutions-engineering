@@ -1,0 +1,15 @@
+[project]
+name = "manas-workshop-s2-agents"
+version = "0.1.0"
+description = "Manas AI Workshop S2 — agentic pipelines on Union (Flyte 2.0)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "flyte>=2.5.12",
+    "anthropic>=0.40",
+    "unionai-reuse>=0.1.9",
+    "litellm>=1.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
