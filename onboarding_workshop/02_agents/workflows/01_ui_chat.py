@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import pathlib
 
-# {{docs-fragment all}}
 import flyte
 from flyte.ai.agents import Agent
 from flyte.ai.chat import AgentChatAppEnvironment, CustomTheme
@@ -103,7 +102,6 @@ env = AgentChatAppEnvironment(
     secrets=flyte.Secret("internal-anthropic-api-key", as_env_var="ANTHROPIC_API_KEY"),
     passthrough_auth=True,
 )
-# {{/docs-fragment all}}
 
 
 if __name__ == "__main__":

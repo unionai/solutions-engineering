@@ -1,7 +1,7 @@
 [project]
-name = "manas-workshop-s2-agents"
+name = "workshop-s2-agents"
 version = "0.1.0"
-description = "Manas AI Workshop S2 — agentic pipelines on Union (Flyte 2.0)"
+description = "Workshop S2 — agentic pipelines on Union (Flyte 2.0)"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
