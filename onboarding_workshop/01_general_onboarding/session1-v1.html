@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workshop S1 · Intro to Flyte: Concepts &amp; Best Practices</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/plugin/highlight/monokai.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#08080c; --bg2:#0e0e16; --panel:#13131d; --panel-border:rgba(255,255,255,.08);
+    --ink:#f4f4f6; --ink-dim:#a1a1aa; --ink-faint:#6b6b76;
+    --amber:#fbbf24; --amber-soft:rgba(251,191,36,.12); --amber-line:rgba(251,191,36,.35);
+    --red:#f87171; --green:#34d399; --blue:#60a5fa; --violet:#a78bfa;
+  }
+
+  .reveal{ font-family:'Inter',system-ui,sans-serif; color:var(--ink);
+           font-size:30px; font-weight:400; letter-spacing:-.005em; }
+  .reveal .slides{ text-align:left; }
+  .reveal .slides section{ height:100%; }
+
+  .reveal-viewport{
+    background:
+      radial-gradient(1100px 700px at 78% -8%, rgba(251,191,36,.10), transparent 60%),
+      radial-gradient(900px 600px at -5% 108%, rgba(167,139,250,.10), transparent 55%),
+      var(--bg);
+  }
+
+  .reveal h1,.reveal h2,.reveal h3{ color:var(--ink); font-weight:800;
+    line-height:1.08; letter-spacing:-.022em; text-transform:none; margin:0 0 .4em; }
+  .reveal h1{ font-size:1.95em; font-weight:900; }
+  .reveal h2{ font-size:1.4em; }
+  .reveal h3{ font-size:1.05em; font-weight:700; }
+  .reveal p{ line-height:1.5; }
+  .reveal strong{ color:#fff; font-weight:700; }
+  .reveal em{ color:var(--amber); font-style:normal; font-weight:600; }
+  .reveal a{ color:var(--amber); }
+
+  .eyebrow{ display:inline-block; font-size:.5em; font-weight:700; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--amber); background:var(--amber-soft);
+    padding:.45em 1em; border-radius:999px; border:1px solid var(--amber-line); margin-bottom:.9em; }
+
+  .dim{ color:var(--ink-dim); }
+  .faint{ color:var(--ink-faint); }
+  .big{ font-size:1.5em; font-weight:800; line-height:1.12; }
+  .huge{ font-size:1.85em; font-weight:900; line-height:1.06; letter-spacing:-.03em; }
+  .amber{ color:var(--amber); }
+  .green{ color:var(--green); }
+  .red{ color:var(--red); }
+  .blue{ color:var(--blue); }
+  .violet{ color:var(--violet); }
+  .center{ text-align:center; }
+  .kicker{ color:var(--amber); font-weight:700; font-size:.62em; letter-spacing:.12em;
+    text-transform:uppercase; margin-bottom:.5em; }
+  .strike{ text-decoration:line-through; color:var(--ink-faint); text-decoration-color:var(--red); }
+  .mono{ font-family:'JetBrains Mono',monospace; }
+
+  .reveal ul{ list-style:none; margin:.3em 0; padding:0; }
+  .reveal ul li{ position:relative; padding-left:1.4em; margin:.42em 0; line-height:1.4; }
+  .reveal ul li::before{ content:"›"; position:absolute; left:0; color:var(--amber); font-weight:800; }
+  .reveal ul.plain li::before{ content:""; }
+  .reveal ul.check li::before{ content:"✓"; color:var(--green); font-weight:800; }
+  .reveal ul.x li::before{ content:"✕"; color:var(--red); font-weight:800; }
+
+  .reveal pre{ width:100%; box-shadow:none; margin:.2em 0; font-size:.5em; }
+  .reveal pre code{ font-family:'JetBrains Mono',monospace; font-weight:500; line-height:1.42;
+    border-radius:14px; padding:1.1em 1.3em; background:#0c0c14;
+    border:1px solid var(--panel-border); max-height:none; }
+  .reveal code{ font-family:'JetBrains Mono',monospace; }
+  .reveal .hljs-comment{ color:#5f6675; font-style:italic; }
+
+  .cols{ display:grid; grid-template-columns:1fr 1fr; gap:1.5em; align-items:start; }
+  .cols.w-left{ grid-template-columns:.85fr 1.15fr; }
+  .cols.w-right{ grid-template-columns:1.15fr .85fr; }
+  .cols3{ display:grid; grid-template-columns:repeat(3,1fr); gap:1em; align-items:start; }
+  .col-prose{ font-size:.82em; }
+  .col-prose p{ margin:.5em 0; }
+
+  table.layers{ width:100%; border-collapse:collapse; font-size:.6em; }
+  table.layers th{ text-align:left; color:var(--amber); font-weight:700; padding:.5em .7em;
+    border-bottom:1px solid var(--amber-line); font-size:.95em; }
+  table.layers td{ padding:.5em .7em; border-bottom:1px solid rgba(255,255,255,.06);
+    vertical-align:top; line-height:1.32; }
+  table.layers td.layer{ font-weight:700; color:#fff; white-space:nowrap; }
+
+  .card{ background:var(--panel); border:1px solid var(--panel-border); border-radius:14px;
+    padding:.7em .9em; margin:.4em 0; font-size:.72em; line-height:1.35; }
+  .card.accent{ border-color:var(--amber-line); background:var(--amber-soft); }
+  .card.danger{ border-color:rgba(248,113,113,.4); background:rgba(248,113,113,.08); }
+  .card.good{ border-color:rgba(52,211,153,.4); background:rgba(52,211,153,.08); }
+  .card .lead{ font-weight:700; color:#fff; }
+  .card h3{ margin:0 0 .3em; font-size:1.02em; }
+
+  .pills{ display:flex; gap:.6em; flex-wrap:wrap; margin-top:.5em; }
+  .pill{ font-size:.6em; padding:.4em .9em; border-radius:999px; background:var(--panel);
+    border:1px solid var(--panel-border); color:var(--ink-dim); }
+  .pill b{ color:var(--amber); }
+
+  .stats{ display:grid; grid-template-columns:repeat(2,1fr); gap:.7em; margin-top:.5em; }
+  .stat{ background:var(--panel); border:1px solid var(--panel-border); border-radius:14px; padding:.7em .9em; }
+  .stat .n{ font-size:1.5em; font-weight:900; color:var(--amber); line-height:1; letter-spacing:-.03em; }
+  .stat .l{ font-size:.58em; color:var(--ink-dim); margin-top:.35em; line-height:1.3; }
+
+  /* architecture diagram boxes */
+  .node{ fill:var(--panel); stroke:var(--amber-line); stroke-width:1.5; rx:10; }
+  .node-strong{ fill:var(--amber-soft); stroke:var(--amber); stroke-width:2; rx:10; }
+  .node-dim{ fill:#0c0c14; stroke:var(--panel-border); stroke-width:1.5; rx:10; }
+  .nlabel{ fill:#fff; font-family:'Inter',sans-serif; font-weight:700; font-size:15px; text-anchor:middle; }
+  .nsub{ fill:var(--ink-dim); font-family:'JetBrains Mono',monospace; font-size:11px; text-anchor:middle; }
+  .edge{ stroke:var(--ink-faint); stroke-width:1.6; fill:none; }
+  .edge-amber{ stroke:var(--amber); stroke-width:2; fill:none; }
+  .elabel{ fill:var(--ink-dim); font-family:'JetBrains Mono',monospace; font-size:11px; }
+  .zone{ fill:rgba(255,255,255,.02); stroke:var(--panel-border); stroke-dasharray:5 5; stroke-width:1.5; rx:14; }
+  .zlabel{ fill:var(--ink-faint); font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; }
+
+  .reveal .slide-footer{ position:fixed; bottom:14px; left:26px; right:26px;
+    display:flex; justify-content:space-between; font-size:13px; color:var(--ink-faint);
+    font-family:'JetBrains Mono',monospace; letter-spacing:.02em; z-index:30; pointer-events:none; }
+  .reveal .slide-footer .b{ color:var(--amber); }
+  .reveal .progress{ color:var(--amber); height:3px; }
+
+  /* docs link row */
+  .docs{ font-size:.72em; color:var(--ink-faint); margin-top:.6em; }
+  .docs a{ font-family:'JetBrains Mono',monospace; }
+
+  /* demo callout — code lives here, in the live walk-through */
+  .demo{ font-size:.66em; color:var(--green); font-family:'JetBrains Mono',monospace;
+    margin-top:.7em; padding:.5em .8em; border-radius:10px;
+    border:1px solid rgba(52,211,153,.35); background:rgba(52,211,153,.07); }
+  .demo b{ color:var(--green); letter-spacing:.08em; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- 1 — TITLE -->
+<section data-background-color="#08080c">
+  <div style="margin-top:.3em">
+    <div class="eyebrow">Union.ai · Workshop Session 1</div>
+    <h1>Intro to <span class="amber">Flyte</span></h1>
+    <p class="big" style="margin-top:.1em">Concepts &amp; Best Practices</p>
+    <p class="dim" style="margin-top:1.1em; font-size:.82em">Hosts: <strong>Ray</strong> + <strong>Leon</strong> <span class="faint">(+ Samhita, SME)</span> · ~60 min · recorded</p>
+    <p class="faint" style="font-size:.72em; margin-top:1.2em">Quick round-table to start, then we build up from your first task.</p>
+  </div>
+  <aside class="notes">
+    Round-table intro: hosts first (Ray, Leon), then around the room — name, whether you're on the science or engineering side, and what you run today (SLURM, notebooks, local, VMs).
+    Set expectation: ~45 min walkthrough + live demos, then open discussion. Goal for everyone: leave able to run your first task on your cluster and know where the docs live.
+  </aside>
+</section>
+
+<!-- 2 — AGENDA -->
+<section>
+  <div class="kicker">Today · the path</div>
+  <h2>From your laptop to a <span class="amber">durable, parallel</span> run</h2>
+  <table class="layers" style="margin-top:.5em">
+    <tr><th>Step</th><th>What you'll leave knowing</th></tr>
+    <tr><td class="layer">Setup &amp; access</td><td>Install the CLI, log in, and reach your cluster</td></tr>
+    <tr><td class="layer">Tasks &amp; runs</td><td>Turn a Python function into a containerized job — run it local, then remote</td></tr>
+    <tr><td class="layer">Workflows &amp; fan-out</td><td>Compose tasks and run hundreds in parallel (goodbye job arrays)</td></tr>
+    <tr><td class="layer">Data &amp; I/O</td><td>How data moves between tasks — automatically</td></tr>
+    <tr><td class="layer">Environments &amp; resources</td><td>Images, CPU/GPU/memory, dependencies</td></tr>
+    <tr><td class="layer">Best practices</td><td>Reuse, caching, retries, traces, reports — faster + cheaper + observable</td></tr>
+  </table>
+  <aside class="notes">
+    Don't read the table — use it to set the map. Emphasize the arc: each step is a short "here's the idea" slide, then we run it live. Deploy + scheduling get a quick teaser at the end; the deep-dives (ML training, apps, agents, queues) are future sessions.
+  </aside>
+</section>
+
+<!-- 3 — FRAMING: WHAT IS FLYTE -->
+<section>
+  <div class="kicker">0 · Framing · Why Flyte</div>
+  <h2>Your Python, made <span class="amber">durable &amp; distributed</span></h2>
+  <div class="cols w-right" style="margin-top:.4em">
+    <div>
+      <div class="card danger"><span class="lead">The old way</span><br>SLURM scripts, notebooks, code on a VM. Parallelism is manual, failures are yours to babysit, and "what ran, on what, for how long?" is hard to answer.</div>
+      <div class="card accent"><span class="lead">With Flyte</span><br>Write normal Python. Each function becomes a <em>containerized, reproducible</em> job — parallel, retryable, and fully observable. Same code runs on your laptop or the cluster.</div>
+    </div>
+    <div class="col-prose">
+      <p class="dim">What that gets a research team:</p>
+      <ul>
+        <li>Scale out experiments without writing scheduler glue</li>
+        <li>Reproducible runs — inputs, outputs, and code tracked</li>
+        <li>Right-size compute per step (CPU here, GPU there)</li>
+        <li>One place to see what ran and why it failed</li>
+      </ul>
+    </div>
+  </div>
+  <p class="docs">Start here: <a href="https://www.union.ai/docs/v2/union/user-guide/overview/">union.ai/docs › Overview</a></p>
+  <aside class="notes">
+    Keep it short and momentum-focused. Read the room: who's on SLURM today, who's in notebooks, who's already running on Union.
+    Framing: they're moving distributed training off SLURM and running drug-discovery pipelines — lead with "your Python, unchanged, but durable and parallel."
+  </aside>
+</section>
+
+<!-- 4 — CORE VOCABULARY -->
+<section>
+  <div class="kicker">0 · Framing · The words we'll use</div>
+  <h2>Five words for the whole day</h2>
+  <table class="layers" style="margin-top:.45em">
+    <tr><th>Term</th><th>What it is</th></tr>
+    <tr><td class="layer"><span class="amber">Task</span></td><td>A Python function that runs as its own containerized job</td></tr>
+    <tr><td class="layer"><span class="amber">TaskEnvironment</span></td><td>Shared config — image, resources — for a group of tasks</td></tr>
+    <tr><td class="layer"><span class="amber">Run</span> / <span class="amber">Action</span></td><td>A run is one execution; each task invocation inside it is an action</td></tr>
+    <tr><td class="layer"><span class="amber">Project</span> / <span class="amber">Domain</span></td><td>Where work lives — e.g. development vs staging vs production</td></tr>
+    <tr><td class="layer"><span class="amber">Workflow</span></td><td>Not a special object — just a task that calls other tasks</td></tr>
+  </table>
+  <p class="docs">Docs: <a href="https://www.union.ai/docs/v2/union/user-guide/core-concepts/">union.ai/docs › Core Concepts</a></p>
+  <aside class="notes">
+    This is the vocabulary the rest of the session assumes. The big mindset shift for V2: there's no separate "workflow" construct — a workflow is literally a task that awaits other tasks. Keep it to ~60 seconds.
+  </aside>
+</section>
+
+<!-- 5 — SETUP & ACCESS -->
+<section>
+  <div class="kicker">1 · Setup &amp; access</div>
+  <h2>Get everyone on the <span class="amber">cluster</span></h2>
+  <div class="cols" style="margin-top:.3em">
+    <div class="col-prose">
+      <ul>
+        <li>Install the <strong>CLI</strong>, then <strong class="mono">flyte create config</strong> to point at your cluster's endpoint</li>
+        <li>Log in — auth is handled for you</li>
+        <li>Pick a <strong>project</strong> + <strong>domain</strong> (development / staging / production)</li>
+        <li>Tour the <strong>UI</strong>: runs, logs, and where results land</li>
+      </ul>
+    </div>
+    <div>
+      <div class="card"><span class="lead">Projects &amp; domains</span><br>Domains keep <em>development</em>, <em>staging</em>, and <em>production</em> work isolated — and map to how your clusters are laid out.</div>
+    </div>
+  </div>
+  <p class="docs">Docs: <a href="https://www.union.ai/docs/v2/union/user-guide/quickstart/">union.ai/docs › Quickstart</a> · <a href="https://www.union.ai/docs/v2/union/user-guide/core-concepts/projects-and-domains/">Projects &amp; Domains</a></p>
+  <div class="demo"><b>▶ LIVE DEMO</b> — install, <span class="mono">flyte create config</span>, log in, and walk the console UI on your cluster.</div>
+  <aside class="notes">
+    Do this live rather than on slides. Confirm everyone can reach the endpoint before moving on — this is the #1 place people get stuck. Show where a run shows up in the UI so the next section lands.
+  </aside>
+</section>
+
+<!-- 6 — TASKS & RUNS -->
+<section>
+  <div class="kicker">2 · Tasks &amp; runs</div>
+  <h2>Your first task, then your first <span class="amber">run</span></h2>
+  <div class="cols" style="margin-top:.3em">
+    <div class="col-prose">
+      <p class="dim">The whole loop, three pieces:</p>
+      <ul>
+        <li>Define a <strong>TaskEnvironment</strong> (image + resources)</li>
+        <li>Decorate a function with <strong class="mono">@env.task</strong></li>
+        <li>Launch it with <strong class="mono">flyte.run(...)</strong></li>
+      </ul>
+    </div>
+    <div>
+      <div class="card accent"><span class="lead">Run local → run remote</span><br><span class="mono">flyte run --local</span> runs it on your laptop for a fast dev loop. Drop <span class="mono">--local</span> and the exact same code runs on the cluster.</div>
+      <div class="card"><span class="lead">Read the run page</span><br>Every run gets a URL — status, inputs/outputs, logs, and each action, in the UI.</div>
+    </div>
+  </div>
+  <p class="docs">Docs: <a href="https://www.union.ai/docs/v2/union/user-guide/core-concepts/tasks/">union.ai/docs › Tasks</a> · <a href="https://www.union.ai/docs/v2/union/user-guide/run-modes/running-locally/">Run Locally</a></p>
+  <div class="demo"><b>▶ LIVE DEMO</b> — <span class="mono">00_hello_union.py</span>: run <span class="mono">--local</span>, then remote, and open the run page in the UI.</div>
+  <aside class="notes">
+    This is the anchor demo. Run hello_union locally first (instant), then remotely, then click into the run page and show the parallel greet() actions. The code slide next is optional — decide with the group whether to show it or keep it purely in the demo.
+  </aside>
+</section>
+
+<!-- 7 — THE ONE CODE SLIDE (for review) -->
+<section>
+  <div class="kicker">2 · Tasks &amp; runs · example</div>
+  <h2>What a task actually <span class="amber">looks like</span></h2>
+  <div class="cols w-left" style="margin-top:.2em">
+<pre><code class="language-python" data-trim>
+import flyte
+
+env = flyte.TaskEnvironment(
+    name="hello_union",
+    resources=flyte.Resources(memory="250Mi"),
+)
+
+@env.task
+def greet(name: str) -> str:
+    return f"Hello, {name}!"
+
+@env.task
+def main(names: list[str] = ["Alice", "Bob"]) -> list[str]:
+    return list(flyte.map(greet, names))   # runs in parallel
+</code></pre>
+    <div class="col-prose">
+      <ul>
+        <li>Plain Python + one decorator</li>
+        <li><span class="mono">main</span> calls <span class="mono">greet</span> — that's a workflow</li>
+        <li><span class="mono">flyte.map</span> fans it out in parallel</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card danger" style="margin-top:.3em"><span class="lead">⚠ Needs review — Leon &amp; Ray</span><br>Sample "what code looks like" slide. Decide: keep <em>one</em> snippet in-deck for orientation, or move all code to the live demo and cut this slide?</div>
+  <aside class="notes">
+    This is the single code slide, deliberately isolated. Per Ray + Leon's call: default is concept-slides + live demo, with code shown in the editor, not the deck. Keep this one only if the group wants a static reference to point at.
+  </aside>
+</section>
+
+<!-- 8 — WORKFLOWS & FAN-OUT -->
+<section>
+  <div class="kicker">3 · Workflows &amp; fan-out</div>
+  <h2>Tasks calling tasks — in <span class="amber">parallel</span></h2>
+  <div class="cols" style="margin-top:.3em">
+    <div class="col-prose">
+      <ul>
+        <li>Fan out with <strong class="mono">flyte.map()</strong>, <strong class="mono">asyncio.gather</strong>, or <strong class="mono">flyte.group</strong></li>
+        <li>Each invocation is its own action — hundreds run at once, each in its own pod</li>
+        <li>Handle failures per-item so one bad task doesn't sink the batch</li>
+      </ul>
+    </div>
+    <div>
+      <div class="card good"><span class="lead">Replaces the SLURM job array</span><br>Split → process in parallel → aggregate, in normal Python — no scheduler glue, no submit scripts.</div>
+      <div class="card accent"><span class="lead">Control the concurrency</span><br>Cap how many run at once — the built-in answer to <em>licensing / API rate limits</em> on third-party services.</div>
+    </div>
+  </div>
+  <p class="docs">Docs: <a href="https://www.union.ai/docs/v2/union/user-guide/task-programming/fanout/">union.ai/docs › Fanout</a> · <a href="https://www.union.ai/docs/v2/union/user-guide/task-programming/controlling-parallelism/">Controlling Parallelism</a></p>
+  <div class="demo"><b>▶ LIVE DEMO</b> — <span class="mono">fanout_fanin</span>: kick off a parallel fan-out and watch the actions light up in the UI.</div>
+  <aside class="notes">
+    Relevance: their pipelines fan out across molecular experiments, and they hit third-party API concurrency/licensing limits — the concurrency-cap point is a direct hook to their queues ask. Demo fanout_fanin; mention return_exceptions for per-item failure handling.
+  </aside>
+</section>
+
+<!-- 9 — DATA & I/O -->
+<section>
+  <div class="kicker">4 · Data &amp; I/O</div>
+  <h2>How data moves — <span class="amber">automatically</span></h2>
+  <div class="cols w-right" style="margin-top:.3em">
+    <div>
+      <div class="card"><span class="lead">Pass values like normal</span><br>Return a value from one task, use it in the next — Flyte offloads it to object storage and hands it back, transparently.</div>
+      <div class="card accent"><span class="lead">Big or file-based data</span><br>Use <em>File</em>, <em>Dir</em>, and <em>DataFrame</em> to move large artifacts by reference — no copying whole datasets around.</div>
+    </div>
+    <div class="col-prose">
+      <ul>
+        <li>Small outputs: just return them</li>
+        <li>Files/models: <span class="mono">File.from_local()</span> → <span class="mono">.download()</span></li>
+        <li>Structured inputs: dataclasses for typed, safe I/O</li>
+      </ul>
+    </div>
+  </div>
+  <p class="docs">Docs: <a href="https://www.union.ai/docs/v2/union/user-guide/core-concepts/where-data-lives/">union.ai/docs › Where Data Lives</a> · <a href="https://www.union.ai/docs/v2/union/user-guide/task-programming/files-and-directories/">Files &amp; Directories</a></p>
+  <div class="demo"><b>▶ LIVE DEMO</b> — a task that writes a model file and a downstream task that downloads it (from the ML pipeline).</div>
+  <aside class="notes">
+    Keep conceptual — the mental model is "data passes automatically; use File/Dir/DataFrame for big things." This is a trim-to-fit section if time is tight. Note: they asked about Volumes on 7/17 — mention it exists (on-demand S3 mounts) and defer the deep-dive to S2.
+  </aside>
+</section>
+
+<!-- 10 — ENVIRONMENTS, IMAGES & RESOURCES -->
+<section>
+  <div class="kicker">5 · Environments, images &amp; resources</div>
+  <h2>Right compute, right <span class="amber">dependencies</span></h2>
+  <div class="cols" style="margin-top:.3em">
+    <div class="col-prose">
+      <ul>
+        <li>Declare an <strong>image</strong> — <span class="mono">from_debian_base().with_pip_packages(...)</span></li>
+        <li>Request <strong>resources</strong> per task — CPU, memory, <em>GPU</em></li>
+        <li>Split heavy vs light work across environments; a driver <span class="mono">depends_on</span> its workers</li>
+        <li>Pull from your own registry</li>
+      </ul>
+    </div>
+    <div>
+      <div class="card accent"><span class="lead">One size does not fit all</span><br>A CPU orchestrator can fan out to GPU workers — each task gets exactly the hardware it needs, nothing more.</div>
+    </div>
+  </div>
+  <p class="docs">Docs: <a href="https://www.union.ai/docs/v2/union/user-guide/task-configuration/container-images/">union.ai/docs › Container Images</a> · <a href="https://www.union.ai/docs/v2/union/user-guide/task-configuration/resources/">Resources</a></p>
+  <div class="demo"><b>▶ LIVE DEMO</b> — show a worker env (GPU) + driver env (<span class="mono">depends_on</span>) from the fan-out example.</div>
+  <aside class="notes">
+    Relevance: they're CPU-heavy today and ramping onto GPUs (H200s). Per-task resources + separate GPU envs is exactly how they'll structure training vs orchestration. Tie image-building to the remote image builder (cold-boot win) if asked.
+  </aside>
+</section>
+
+<!-- 11 — BEST PRACTICES: SPEED & COST -->
+<section>
+  <div class="kicker">6 · Best practices · Speed &amp; cost</div>
+  <h2>Faster iterations, <span class="amber">lower spend</span></h2>
+  <div class="cols" style="margin-top:.3em">
+    <div>
+      <div class="card good"><span class="lead">Reusable containers</span><br>Reuse a warm container across many tasks instead of cold-starting each one — big speedup for fan-out, and less wasted compute.</div>
+    </div>
+    <div>
+      <div class="card good"><span class="lead">Caching</span><br><span class="mono">cache="auto"</span> skips recompute when inputs haven't changed — don't pay to run the same step twice.</div>
+    </div>
+  </div>
+  <p class="docs">Docs: <a href="https://www.union.ai/docs/v2/union/user-guide/task-configuration/reusable-containers/">union.ai/docs › Reusable Containers</a> · <a href="https://www.union.ai/docs/v2/union/user-guide/task-configuration/caching/">Caching</a></p>
+  <aside class="notes">
+    Direct hook to the team's cost / right-sizing focus (their tasks were over-provisioned 10x). Reusable containers + caching are the two biggest levers. Show the reuse speedup live on the fan-out if the demo env allows.
+  </aside>
+</section>
+
+<!-- 12 — BEST PRACTICES: ROBUSTNESS & OBSERVABILITY -->
+<section>
+  <div class="kicker">6 · Best practices · Robustness &amp; observability</div>
+  <h2>Recover automatically, <span class="amber">see everything</span></h2>
+  <table class="layers" style="margin-top:.4em">
+    <tr><th>Feature</th><th>What it gives you</th></tr>
+    <tr><td class="layer">Retries &amp; timeouts</td><td>Auto-recover from transient failures; bound hung jobs so they fail fast</td></tr>
+    <tr><td class="layer">Traces</td><td><span class="mono">@flyte.trace</span> — durable, observable calls to external services and models</td></tr>
+    <tr><td class="layer">Reports</td><td>Attach rich HTML output (charts, tables) right to the run</td></tr>
+  </table>
+  <p class="docs">Docs: <a href="https://www.union.ai/docs/v2/union/user-guide/task-configuration/retries-and-timeouts/">union.ai/docs › Retries &amp; Timeouts</a> · <a href="https://www.union.ai/docs/v2/union/user-guide/task-programming/reports/">Reports</a></p>
+  <div class="demo"><b>▶ LIVE DEMO</b> — open a run's report (training curves) and show a retried action recovering.</div>
+  <aside class="notes">
+    Robustness maps to the team's reliability sensitivity (Mission-Critical account). Reports resonate with scientists — visual output per experiment. Mention checkpoints for long training runs as an advanced follow-up.
+  </aside>
+</section>
+
+<!-- 13 — RUN, DEPLOY & INSPECT -->
+<section>
+  <div class="kicker">7 · Run, deploy &amp; inspect</div>
+  <h2>From a run to something <span class="amber">standing</span></h2>
+  <div class="cols" style="margin-top:.3em">
+    <div class="col-prose">
+      <ul>
+        <li><strong class="mono">flyte run</strong> — one-off execution</li>
+        <li><strong class="mono">flyte deploy</strong> — register tasks so others can run them, or they run on a schedule</li>
+        <li>Inspect from the <strong>UI</strong> or CLI — <span class="mono">flyte get logs</span>, run/action details</li>
+      </ul>
+    </div>
+    <div>
+      <div class="card accent"><span class="lead">Scheduling · teaser</span><br>A <em>Trigger</em> + <em>Cron</em> runs a task on a schedule — nightly pipelines, recurring jobs. We'll go deeper in a future session.</div>
+    </div>
+  </div>
+  <p class="docs">Docs: <a href="https://www.union.ai/docs/v2/union/user-guide/task-deployment/">union.ai/docs › Run &amp; Deploy Tasks</a> · <a href="https://www.union.ai/docs/v2/union/user-guide/task-deployment/view-logs/">View Logs</a></p>
+  <aside class="notes">
+    Keep light / trim-to-fit. Point to logs in the UI (they've hit log-retrieval friction before). Triggers is just a teaser — scheduling + productionization is a natural S2 topic alongside ML training.
+  </aside>
+</section>
+
+<!-- 14 — WHAT'S NEXT + DISCUSSION -->
+<section data-background-color="#08080c">
+  <div style="margin-top:.2em">
+    <div class="kicker">Wrap-up · your turn</div>
+    <h2>Where should we go <span class="amber">next?</span></h2>
+    <div class="cols" style="margin-top:.4em">
+      <div class="col-prose">
+        <p class="dim">The series from here:</p>
+        <ul>
+          <li><strong>S2 — ML Engineering:</strong> data pipelines, GPU training, hosting models</li>
+          <li><strong>S3 — Agentic AI:</strong> LLM apps &amp; multi-agent workflows</li>
+          <li>Deep-dives on demand: queues, conditions, apps</li>
+        </ul>
+      </div>
+      <div class="col-prose">
+        <p class="dim">Open floor:</p>
+        <ul>
+          <li>What do you run today — and what's the first thing you'd move?</li>
+          <li>Which comes next: model training, apps, or agents?</li>
+          <li>Interest in queues / concurrency limits / cost right-sizing?</li>
+        </ul>
+      </div>
+    </div>
+    <p class="faint" style="font-size:.7em; margin-top:.9em">Getting help: the docs, your <span class="mono">#your-team</span> channel, and these slides + resource links to follow.</p>
+  </div>
+  <aside class="notes">
+    Discovery goals (keep in your head): who authors workflows vs owns infra; what they'd migrate first; which S2 topic to prioritize; live interest in queues/concurrency (their P0). Let the room talk — this is the two-way half. Close by confirming the follow-up session + sending the resource-collection page.
+  </aside>
+</section>
+
+</div>
+</div>
+
+<div class="slide-footer">
+  <span><span class="b">Union.ai</span> · Intro to Flyte (S1)</span>
+  <span>From SLURM scripts to durable, parallel Python.</span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/plugin/notes/notes.js"></script>
+<script>
+  Reveal.initialize({
+    width: 1280, height: 720, margin: 0.06,
+    controls: true, progress: true, hash: true, slideNumber: 'c/t',
+    transition: 'fade', transitionSpeed: 'fast',
+    plugins: [ RevealHighlight, RevealNotes ],
+  });
+</script>
+</body>
+</html>

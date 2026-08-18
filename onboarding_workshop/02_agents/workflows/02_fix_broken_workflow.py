@@ -1,5 +1,5 @@
 """
-Part 3: Agentic development on Union — fix a broken workflow with your CLI agent
+Part 2: Agentic development on Union, fix a broken workflow with your CLI agent
 
 Prompt for an agent with flyte-plugins and flyte mcp servers installed:
 
@@ -8,10 +8,10 @@ Prompt for an agent with flyte-plugins and flyte mcp servers installed:
     Use the `flyte-docs` MCP server to look up the right Flyte 2.0 API or
     pattern whenever an error points at one.
     Use the `flyte-cluster` (Flyte server) MCP server to RUN this file and
-    then INSPECT the failed run — its actions, logs, and errorInfo — to
+    then INSPECT the failed run (its actions, logs, and errorInfo) to
     find each root cause.
 
-    Work in a loop on 03_fix_broken_workflow until it succeeds.
+    Work in a loop on 02_fix_broken_workflow until it succeeds.
     Write to a new file instead of editing in this one.
 """
 

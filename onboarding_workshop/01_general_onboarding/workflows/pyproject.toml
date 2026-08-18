@@ -1,7 +1,7 @@
 [project]
-name = "manas-workshop-s1"
+name = "flyte-workshop-s1"
 version = "0.1.0"
-description = "Manas AI Workshop S1 — one example workflow per chapter"
+description = "Flyte Workshop S1: one example workflow per chapter"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

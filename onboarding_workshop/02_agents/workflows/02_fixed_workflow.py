@@ -1,7 +1,7 @@
 """
-Part 3: Agentic development on Union — fixed version of the broken workflow.
+Part 2: Agentic development on Union, fixed version of the broken workflow.
 
-Fixes applied vs 03_fix_broken_workflow.py:
+Fixes applied vs 02_fix_broken_workflow.py:
   1. worker image now declares the `numpy` pip package (enrich() imports numpy).
   2. driver_env declares depends_on=[worker_env] because main() calls enrich().
 """

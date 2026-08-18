@@ -12,7 +12,7 @@
 """Run ``Agent`` behind the built-in chat UI.
 
 Because ``flyte.ai.agents.Agent`` implements the ``AgentProtocol``, it plugs
-straight into ``flyte.ai.chat.AgentChatAppEnvironment`` — you get a hosted chat
+straight into ``flyte.ai.chat.AgentChatAppEnvironment``: you get a hosted chat
 shell, tool sidebar, and NDJSON streaming for free.
 """
 
@@ -28,9 +28,7 @@ task_env = flyte.TaskEnvironment(
     name="chat-agent-tools",
     image=flyte.Image.from_debian_base().with_pip_packages("litellm", "httpx"),
     resources=flyte.Resources(cpu=1, memory="512Mi"),
-    secrets=[
-        flyte.Secret(key="internal-anthropic-api-key", as_env_var="ANTHROPIC_API_KEY")
-    ],
+    secrets=[flyte.Secret(key="ANTHROPIC_API_KEY", as_env_var="ANTHROPIC_API_KEY")],
 )
 
 
@@ -99,7 +97,7 @@ env = AgentChatAppEnvironment(
         "litellm", "fastapi", "uvicorn"
     ),
     resources=flyte.Resources(cpu=2, memory="2Gi"),
-    secrets=flyte.Secret("internal-anthropic-api-key", as_env_var="ANTHROPIC_API_KEY"),
+    secrets=flyte.Secret("ANTHROPIC_API_KEY", as_env_var="ANTHROPIC_API_KEY"),
     passthrough_auth=True,
 )
 
