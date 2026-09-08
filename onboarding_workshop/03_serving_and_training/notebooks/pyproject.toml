@@ -1,0 +1,22 @@
+[project]
+name = "session3-serving-and-training-notebooks"
+version = "0.1.0"
+description = "Session 3 — serving & ML training on Union (runnable scripts)"
+readme = "../README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "flyte>=2.7.1",
+    "flyteplugins-union>=0.1.0",   # fork()
+    "scikit-learn>=1.5",
+    "pandas>=2.2",
+    "pyarrow>=17",
+    "async-lru>=2.0",              # DynamicBatcher singleton (batch inference)
+    "unionai-reuse>=0.1.9",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "streamlit>=1.41",
+    "requests>=2.32",
+    "jupyter>=1.0",
+    "nbconvert>=7.16",
+    "matplotlib>=3.9",
+]
